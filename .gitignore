@@ -3,6 +3,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# my downloaded subscription xml
+*.xml
+*.json
+*.yaml
+*.sqlite
 # C extensions
 *.so
 
