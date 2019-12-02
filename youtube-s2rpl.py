@@ -101,7 +101,7 @@ def dumpentries():
     s = sorted(tracks, key=lambda track: track['published'], reverse=False)
     ss = s[videocount:]
     # ss.reverse()
-    debug("DUMPENTRIES SORTED")
+    print("#EXTM3U")
     for track in ss:
         # print(track['title'], track['published'], track['published_parsed'])
         t_id = re.match(r'^\w+(?=:)', track['id'])[0]
