@@ -143,7 +143,7 @@ def handlesub(file):
         sub = xmltodict.parse(file_h.read())
     # pprint(sub['opml']['body']['outline']['outline'])
     subs = sub['opml']['body']['outline']['outline']
-    random.suffle(subs)
+    random.shuffle(subs)
     for v in subs:
         # debug(v)
         counter = counter + 1
