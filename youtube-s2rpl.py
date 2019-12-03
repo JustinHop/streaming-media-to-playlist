@@ -101,18 +101,18 @@ def dumpentries():
     s = sorted(tracks, key=lambda track: track['published'], reverse=False)
     ss = s[videocount:]
     # ss.reverse()
-    print("#EXTM3U")
     for track in ss:
         # print(track['title'], track['published'], track['published_parsed'])
         t_id = re.match(r'^\w+(?=:)', track['id'])[0]
         t_pub = re.match(r'^.*(?=T)', track['published'])[0]
+        t_title = re.sub('r[%]+', '', track['title'])
         debug("id: " + track['id'] + " short: " + t_id)
         debug("track: " + track['title'])
         debug("author: " + track['author'])
         debug("published: " + t_pub)
         print("#EXTINF:0,[{}] {} @{} {}".format(
                 track['author'],
-                track['title'],
+                t_title,
                 t_id,
                 t_pub))
         print(track['link'])
@@ -142,7 +142,9 @@ def handlesub(file):
     with open(file, "r") as file_h:
         sub = xmltodict.parse(file_h.read())
     # pprint(sub['opml']['body']['outline']['outline'])
-    for v in sub['opml']['body']['outline']['outline']:
+    subs = sub['opml']['body']['outline']['outline']
+    random.suffle(subs)
+    for v in subs:
         # debug(v)
         counter = counter + 1
         if counter <= int(conf['--channels']):
