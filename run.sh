@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./youtube-s2rpl.py --channels=900 --videos=555 -b bitchute.html subs.json | tr -d '%' | tee ~/tube/$(date +%s)-size_555-playlist.m3u
+./sm2p.py --channels=900 --videos=555 -b bitchute.html subs.json | tr -d '%' | tee ~/tube/$(date +%s)-size_555-playlist.m3u

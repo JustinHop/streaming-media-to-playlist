@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-'''youtube-s2rpl Justin Hoppensteadt 2019 <justinrocksmadscience@gmail.com
-Usage: youtube-s2rpl [options] [FILE]
+'''sm2p.py Justin Hoppensteadt 2019 <justinrocksmadscience@gmail.com
+Usage: sm2p.py [options]
 
 Options:
-    -D --debug          Debugging output
     -v --videos=INT     Number of videos to output [default: 500]
     -c --channels=INT   Number of channels to parse per input [default: 1000]
-    -s --starttime      Oldest video to display
     -b --bitchute=FILE  HTML save of bitchute subscriptions page
+    -y --youtube=FILE   Youtube subscription, Download https://www.youtube.com/subscription_manager?action_takeout=1
 
-    -r --resume         Resume see/unseen
+    -D --debug          Debugging output
     -h --help           Help!
 
-Arguments:
-    FILE            Youtube subs xml file from https://www.youtube.com/subscription_manager?action_takeout=1
 '''
 
 import requests
@@ -222,9 +219,9 @@ def main():
         except BaseException as x:
             debug(x)
 
-    if conf['FILE'] and os.path.exists(conf['FILE']):
+    if conf['--youtube'] and os.path.exists(conf['--youtube']):
         try:
-            handlesub(conf['FILE'])
+            handlesub(conf['--youtube'])
         except BaseException as x:
             debug(x)
 
