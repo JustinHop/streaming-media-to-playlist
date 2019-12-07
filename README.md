@@ -6,4 +6,4 @@ Slowly adding support for other streaming services.
 
 Currently Supports
 - youtube.com, from https://www.youtube.com/subscription_manager?action_takeout=1
-- bitshute.com, save your subs page as html
+- bitchute.com, save your subs page as html
