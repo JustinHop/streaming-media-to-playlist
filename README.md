@@ -1,2 +1,9 @@
-# youtube-subs2recentplaylist
-Replaces youtube subscription page.  Takes https://www.youtube.com/subscription_manager?action_takeout=1 as input, outputs m3u playlist.
+# streaming-media-to-playlist
+Replaces streaming video subscription pages and  outputs m3u playlist. I use it
+with mpv
+
+Slowly adding support for other streaming services.
+
+Currently Supports
+- youtube.com, from https://www.youtube.com/subscription_manager?action_takeout=1
+- bitshute.com, save your subs page as html

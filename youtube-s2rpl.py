@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 '''youtube-s2rpl Justin Hoppensteadt 2019 <justinrocksmadscience@gmail.com
-Usage: youtube-s2rpl [options] FILE
+Usage: youtube-s2rpl [options] [FILE]
 
 Options:
     -D --debug          Debugging output
     -v --videos=INT     Number of videos to output [default: 500]
-    -c --channels=INT   Number of channels to parse [default: 1000]
+    -c --channels=INT   Number of channels to parse per input [default: 1000]
     -s --starttime      Oldest video to display
+    -b --bitchute=FILE  HTML save of bitchute subscriptions page
+
     -r --resume         Resume see/unseen
     -h --help           Help!
 
@@ -27,8 +29,15 @@ import re
 import feedparser
 import xmltodict
 
+try:
+    from BeautifulSoup import BeautifulSoup
+except ImportError:
+    from bs4 import BeautifulSoup
+
 from docopt import docopt
 # from collections import OrderedDict
+from datetime import datetime
+from time import mktime
 from pprint import pprint, pformat
 
 conf = docopt(__doc__)
@@ -98,13 +107,29 @@ def dumpentries():
         # debug(track['title'])
         # debug(track['published'])
         pass
-    s = sorted(tracks, key=lambda track: track['published'], reverse=False)
+    s = sorted(
+        tracks,
+        key=lambda track: track['published_parsed'],
+        reverse=False)
     ss = s[videocount:]
     # ss.reverse()
     for track in ss:
         # print(track['title'], track['published'], track['published_parsed'])
-        t_id = re.match(r'^\w+(?=:)', track['id'])[0]
-        t_pub = re.match(r'^.*(?=T)', track['published'])[0]
+        try:
+            t_id = re.match(r'^\w+(?=:)', track['id'])[0]
+        except TypeError as x:
+            debug(x)
+            t_id = "bitchute"
+
+        # try:
+        #     t_pub = re.match(r'^.*(?=T)', track['published'])[0]
+        # except TypeError as x:
+        #    debug(x)
+        #    t_pub = datetime.strftime( datetime.fromtimestamp(
+        #             mktime( track['published_parsed'])), "%Y-%m-%d %H:%M")
+
+        t_pub = datetime.strftime( datetime.fromtimestamp(
+                mktime( track['published_parsed'])), "%Y-%m-%d %H:%M")
         t_title = re.sub('r[%]+', '', track['title'])
         debug("id: " + track['id'] + " short: " + t_id)
         debug("track: " + track['title'])
@@ -120,7 +145,7 @@ def dumpentries():
     #     print("Dumping: ", track)
 
 
-def parsechannel(url):
+def parsechannel(url, channelName=None):
     global tracks
 
     try:
@@ -129,8 +154,14 @@ def parsechannel(url):
         # debug(["response.text", text])
         channel = feedparser.parse(text)
         for entry in channel['entries']:
+            debug(entry)
+            if channelName and not 'author' in entry:
+                debug(channelName)
+                entry['author'] = channelName
+            # if entry['published']:
+            #     entry['datetime'] = datetime.strptime(entry['published'])
             tracks.append(entry)
-            # debug(entry['title'])
+            debug(entry['title'])
             # debug(entry['published'])
     except BaseException as x:
         debug(x)
@@ -155,11 +186,49 @@ def handlesub(file):
                     parsechannel(value)
 
 
+def bs_parsechannel(link):
+    debug(link)
+
+
+def bs_handlesub(file):
+    sub = {}
+    counter = 0
+    with open(file, "r") as file_h:
+        sub = BeautifulSoup(file_h.read(), features="lxml")
+
+    subs = sub.body.find_all('a', attrs={'rel': 'author'})
+    random.shuffle(subs)
+    for v in subs:
+        counter = counter + 1
+        if counter <= int(conf['--channels']):
+            c = v.get('href')
+            cname = None
+            try:
+                cname = re.match(r'/channel/(.+)/', c)[1]
+                debug("cname: " + cname)
+            except BaseException as x:
+                debug(x)
+            link = "https://www.bitchute.com/feeds/rss" + c
+            debug(link)
+            parsechannel(link, cname)
+
+
 def main():
     debug(["conf", conf])
+
+    if conf['--bitchute'] and os.path.exists(conf['--bitchute']):
+        try:
+            bs_handlesub(conf['--bitchute'])
+        except BaseException as x:
+            debug(x)
+
     if conf['FILE'] and os.path.exists(conf['FILE']):
-        handlesub(conf['FILE'])
-        dumpentries()
+        try:
+            handlesub(conf['FILE'])
+        except BaseException as x:
+            debug(x)
+
+    dumpentries()
 
 
 if __name__ == "__main__":

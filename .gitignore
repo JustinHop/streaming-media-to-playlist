@@ -3,11 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+cron.sh
+
 # my downloaded subscription xml
 *.xml
 *.json
 *.yaml
 *.sqlite
+*.html
 # C extensions
 *.so
 
