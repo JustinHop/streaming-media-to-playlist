@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-'''sm2p.py Justin Hoppensteadt 2019 <justinrocksmadscience@gmail.com
+'''sm2p-par.py Justin Hoppensteadt 2019 <justinrocksmadscience@gmail.com
 Usage: sm2p.py [options]
 
 Options:
@@ -25,6 +25,13 @@ import re
 
 import feedparser
 import xmltodict
+
+import asyncio
+import aiohttp
+from aiohttp import ClientSession
+
+# import urllib.error
+# import urllib.parse
 
 try:
     from BeautifulSoup import BeautifulSoup
@@ -142,12 +149,13 @@ def dumpentries():
     #     print("Dumping: ", track)
 
 
-def parsechannel(url, channelName=None):
+async def parsechannel(url: str, session: ClientSession, channelName=None, **kwargs):
     global tracks
 
     try:
-        response = requests.get(url)
-        text = response.text
+        response = await session.request(method="GET", url=url, **kwargs)
+        response.raise_for_status()
+        text = await response.text()
         # debug(["response.text", text])
         channel = feedparser.parse(text)
         for entry in channel['entries']:
@@ -164,7 +172,7 @@ def parsechannel(url, channelName=None):
         debug(x)
 
 
-def handlesub(file):
+async def handlesub(file):
     sub = {}
     counter = 0
     with open(file, "r") as file_h:
@@ -172,22 +180,27 @@ def handlesub(file):
     # pprint(sub['opml']['body']['outline']['outline'])
     subs = sub['opml']['body']['outline']['outline']
     random.shuffle(subs)
-    for v in subs:
-        # debug(v)
-        counter = counter + 1
-        if counter <= int(conf['--channels']):
-            debug("channel counter: " + str(counter))
-            for i, (key, value) in enumerate(v.items()):
-                debug([i, key, value])
-                if key == '@xmlUrl':
-                    parsechannel(value)
+    async with ClientSession() as session:
+        tasks = []
+        for v in subs:
+            # debug(v)
+            counter = counter + 1
+            if counter <= int(conf['--channels']):
+                debug("channel counter: " + str(counter))
+                for i, (key, value) in enumerate(v.items()):
+                    debug([i, key, value])
+                    if key == '@xmlUrl':
+                        tasks.append(
+                            parsechannel(url=value, session=session)
+                        )
+        await asyncio.gather(*tasks)
 
 
 def bs_parsechannel(link):
     debug(link)
 
 
-def bs_handlesub(file):
+async def bs_handlesub(file):
     sub = {}
     counter = 0
     with open(file, "r") as file_h:
@@ -195,19 +208,23 @@ def bs_handlesub(file):
 
     subs = sub.body.find_all('a', attrs={'rel': 'author'})
     random.shuffle(subs)
-    for v in subs:
-        counter = counter + 1
-        if counter <= int(conf['--channels']):
-            c = v.get('href')
-            cname = None
-            try:
-                cname = re.match(r'/channel/(.+)/', c)[1]
-                debug("cname: " + cname)
-            except BaseException as x:
-                debug(x)
-            link = "https://www.bitchute.com/feeds/rss" + c
-            debug(link)
-            parsechannel(link, cname)
+    async with ClientSession() as session:
+        tasks = []
+        for v in subs:
+            counter = counter + 1
+            if counter <= int(conf['--channels']):
+                debug("channel counter: " + str(counter))
+                c = v.get('href')
+                cname = None
+                try:
+                    cname = re.match(r'/channel/(.+)/', c)[1]
+                    debug("cname: " + cname)
+                except BaseException as x:
+                    debug(x)
+                link = "https://www.bitchute.com/feeds/rss" + c
+                debug(link)
+                tasks.append(parsechannel(url=link, channelName=cname, session=session))
+        await asyncio.gather(*tasks)
 
 
 def main():
@@ -215,13 +232,13 @@ def main():
 
     if conf['--bitchute'] and os.path.exists(conf['--bitchute']):
         try:
-            bs_handlesub(conf['--bitchute'])
+            asyncio.run(bs_handlesub(conf['--bitchute']))
         except BaseException as x:
             debug(x)
 
     if conf['--youtube'] and os.path.exists(conf['--youtube']):
         try:
-            handlesub(conf['--youtube'])
+            asyncio.run(handlesub(conf['--youtube']))
         except BaseException as x:
             debug(x)
 
