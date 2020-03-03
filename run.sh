@@ -1,3 +1,16 @@
 #!/bin/bash
+ 
+set -x
 
-./sm2p-par.py --channels=1000 --videos=555 -b bitchute.html -y subs.json | tr -d '%' | tee ~/tube/$(date +%s)-size_555-playlist.m3u
+VIDEOS=${1:-250}
+DATE=$(date +%s)
+FILE=~/tube/$DATE-size_$VIDEOS-playlist.m3u
+
+if ! -d ~/tube ; then
+    mkdir ~/tube
+fi
+
+./sm2p-par.py --channels=1100 --videos=$VIDEOS -b bitchute.html -y subs.json | tr -d '%' | tee $FILE
+
+cd ~/tube
+ln -svf $FILE ./latest.m3u
