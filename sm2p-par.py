@@ -18,6 +18,7 @@ Options:
 
 '''
 
+#   -s --state         State file [default: state.yaml]
 import requests
 import requests_cache
 import inspect
@@ -52,7 +53,7 @@ conf = docopt(__doc__)
 tracks = []
 channelcount = 0
 videocount = 0
-
+#   state = {}
 
 try:
     basestring
@@ -147,6 +148,7 @@ def dumpentries():
 
 async def parsechannel(url: str, session: ClientSession, channelName=None, **kwargs):
     global tracks
+    #  global state
 
     try:
         response = await session.request(method="GET", url=url, **kwargs)
@@ -166,6 +168,7 @@ async def parsechannel(url: str, session: ClientSession, channelName=None, **kwa
 
 async def handlesub(file):
     sub = {}
+    #   global state
     counter = 0
     with open(file, "r") as file_h:
         sub = xmltodict.parse(file_h.read())
@@ -224,11 +227,26 @@ async def bs_handlesub(file):
 def main():
     debug(["conf", conf])
 
-    if conf['--cache']:
-        requests_cache.install_cache(
-            'rss',
-            backend='sqlite',
-            expire_after=conf['--cache'])
+    #   global state
+    #
+    #   if conf['--state'] and os.path.exists(conf['--state']):
+    #       try:
+    #           with open(conf['--state'], 'r') as file_h:
+    #               state = yaml.load(file_h)
+    #               close(file_h)
+    #       except yaml.YAMLError as e:
+    #           debug(e)
+    #
+    #   if not 'youtube' in state:
+    #       state['youtube'] = {}
+    #   if not 'bitchute' in state:
+    #       state['bitchute'] = {}
+    #
+    #   if conf['--cache']:
+    #       requests_cache.install_cache(
+    #           'rss',
+    #           backend='sqlite',
+    #           expire_after=conf['--cache'])
 
     if conf['--bitchute'] and os.path.exists(conf['--bitchute']):
         try:
@@ -243,6 +261,15 @@ def main():
             debug(x)
 
     dumpentries()
+
+    #   if conf['--state']:
+    #       try:
+    #           with open(conf['--state'], 'w') as file_h:
+    #               state = yaml.dump(state, file_h)
+    #               close(file_h)
+    #       except yaml.YAMLError as e:
+    #           debug(e)
+
 
 
 if __name__ == "__main__":
